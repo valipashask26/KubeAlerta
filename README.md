@@ -79,3 +79,6 @@ Here, it will deploy 3 types of CRDs:
   - Labels in sample-01 should not match with sample-02.
 
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/valipashask26/KubeAlerta/blob/main/LICENSE) file for details.
