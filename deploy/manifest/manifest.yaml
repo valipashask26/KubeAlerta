@@ -44,7 +44,7 @@ roleRef:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kubealerta-deployment
+  name: kubealerta
   namespace: kubealerta
 spec:
   replicas: 3
