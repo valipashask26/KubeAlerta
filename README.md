@@ -9,7 +9,7 @@ kubealerta is a Kubernetes plugin/operator designed to streamline notifications 
 
 Follow these steps to deploy **kubealerta** in your Kubernetes cluster:
 
-1. Download the manifest file from [here](https://github.com/valipashask26/KubeAlerta/deploy/manifest.yaml).
+1. Download the manifest file from [here](https://github.com/valipashask26/KubeAlerta/blob/main/deploy/manifest/manifest.yaml).
 2. Deploy the manifest file in your Kubernetes cluster using the following command:
 
  ```bash
