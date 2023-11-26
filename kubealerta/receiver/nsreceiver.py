@@ -7,7 +7,7 @@ from kubernetes.client.rest import ApiException
 def get_filtered_resources(namespace=None):
     if not namespace:
         # Specify a default namespace or retrieve dynamically based on your logic
-        namespace = "sk-admin"
+        namespace = "kubealerta"
 
     # Load Kubernetes configuration
     load_kube_config()
