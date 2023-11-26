@@ -3,11 +3,11 @@
 kubealerta is a Kubernetes plugin/operator designed to streamline notifications to Teams channels based on filtered resources. Please note that the project is currently under construction, and we are actively working on enhancing its features.
 
 > [!NOTE]  
-> Currently, KUBEALERTA works only for node alert notifications.
+> Currently, **kubealerta** is configured to send notifications specifically for nodes..
 
 ## Deployment
 
-Follow these steps to deploy kubealerta in your Kubernetes cluster:
+Follow these steps to deploy **kubealerta** in your Kubernetes cluster:
 
 1. Download the manifest file from [here](https://github.com/valipashask26/KubeAlerta/deploy/manifest.yaml).
 2. Deploy the manifest file in your Kubernetes cluster using the following command:
