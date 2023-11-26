@@ -1,6 +1,6 @@
 # main.py
-from config.config import load_kube_config
-from operator.nodenotify import get_filtered_resources
+from kubealerta.config.config import load_kube_config
+from kubealerta.operator.nodenotify import get_filtered_resources
 from kubernetes.client.rest import ApiException
 
 def main():
