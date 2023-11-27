@@ -47,6 +47,7 @@ Here, it will deploy 3 types of CRDs:
      kind: NamespacedFilter
      metadata:
        name: filter2
+       namespace: kubealerta
        labels:
          test: sk-02
      spec:
@@ -64,6 +65,7 @@ Here, it will deploy 3 types of CRDs:
      kind: ClusterFilter
      metadata:
        name: node-alert
+       namespace: kubealerta
        labels:
          test: sk-01
      spec:
@@ -77,6 +79,7 @@ Here, it will deploy 3 types of CRDs:
 - When creating a CRD with `clusterfilter` or `namespacedfilter`, the labels you use should match with the `notify` you are going to create. For example:
   - If you have created a `namespacedfilter` (sample-01) with labels `app: nginx`, then use the same labels for the `notify` CRD (notify-01) to establish a connection.
   - Labels in sample-01 should not match with sample-02.
+  - Create all the resources in "**kubealerta**" Namespace only.
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
