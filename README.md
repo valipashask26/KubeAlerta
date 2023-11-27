@@ -76,7 +76,7 @@ Here, it will deploy 3 types of CRDs:
 
 **NOTE:** 
 - The `notify` CRD is mandatory to create.
-- When creating a CRD with `clusterfilter` or `namespacedfilter`, the labels you use should match with the `notify` you are going to create. For example:
+- When creating a CRD with `clusterfilter` or `namespacedfilter`, the labels you use should match with the `notify` you are going to create. For example: 
   - If you have created a `namespacedfilter` (sample-01) with labels `app: nginx`, then use the same labels for the `notify` CRD (notify-01) to establish a connection.
   - Labels in sample-01 should not match with sample-02.
   - Create all the resources in "**kubealerta**" Namespace only.
