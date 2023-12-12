@@ -31,4 +31,4 @@ COPY --chown=appuser:appuser ./kubealerta /kubealerta/kubealerta
 EXPOSE 5000
 
 # Run main.py when the container launches
-CMD ["python", "./kubealerta/main.py"]
+CMD ["python", "main.py"]
