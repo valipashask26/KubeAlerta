@@ -1,0 +1,11 @@
+apiVersion: kubealerta.io/v1
+kind: ClusterFilter
+metadata:
+  name: node-alert
+  namespace: kubealerta
+  labels:
+    test: kubealerta-01
+spec:
+  resource: Nodes
+  nodesNames:
+    - aks-agent1pool

@@ -1,115 +1,77 @@
-from kubealerta.config.config import load_kube_config
-from kubernetes import client, config
-from kubernetes.client.rest import ApiException
-import re
-import time
+from kubernetes import client, config, watch
 import requests
+import json
+from datetime import datetime
 
-def get_filtered_resources():
-    # Load Kubernetes configuration
-    load_kube_config()
+# Load Kubernetes Config
+# config.load_incluster_config()
+config.load_incluster_config()
+# Kubernetes API Client
+custom_api = client.CustomObjectsApi()
+v1 = client.CoreV1Api()
 
-    # Create Kubernetes API client
-    api_client = client.ApiClient()
+def list_crd_resources(group, version, plural):
+    try:
+        return custom_api.list_cluster_custom_object(group, version, plural)
+    except client.exceptions.ApiException as e:
+        print(f"Exception when calling CustomObjectsApi->list_cluster_custom_object: {e}")
+        return None
 
-    # Get list of ClusterFilter and Notify resources across all namespaces
-    custom_objects_api = client.CustomObjectsApi(api_client)
+# Custom JSON Encoder for datetime objects
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
 
-    # Specify the group/version for your CustomResourceDefinitions (CRDs)
+def process_events(node_name_prefix, webhook_url):
+    w = watch.Watch()
+    try:
+        for event in w.stream(v1.list_node):
+            node_name = event['object'].metadata.name
+            if node_name.startswith(node_name_prefix):
+                print(f"Sending notification to {node_name}")
+                # Convert the event object to a dictionary
+                event_dict = event['object'].to_dict()
+
+                # Prepare the payload with 'Summary' or 'Text'
+                payload = {
+                    "summary": f"Event for node {node_name}",
+                    "text": json.dumps(event_dict, cls=DateTimeEncoder)
+                }
+
+                # Convert the payload to JSON
+                payload_json = json.dumps(payload)
+
+                # Send the JSON data to the webhook URL
+                response = requests.post(webhook_url, data=payload_json, headers={'Content-Type': 'application/json'})
+                if response.status_code != 200:
+                    print(f"Failed to send notification for event on {node_name}")
+                    print(f"HTTP Status Code: {response.status_code}")
+                    print(f"Response Content: {response.content.decode()}")
+                else:
+                    print(f"Response sent successfully for event on {node_name}")
+    except Exception as e:
+        print(f"Error processing events: {e}")
+
+def main():
     group = "kubealerta.io"
     version = "v1"
     cl_filters_kind = "clfilters"
     notifies_kind = "notifies"
 
-    try:
-        # Get ClusterFilter resources across all namespaces
-        cl_filters = custom_objects_api.list_cluster_custom_object(group, version, cl_filters_kind)
+    cl_filters = list_crd_resources(group, version, cl_filters_kind)
+    notifies = list_crd_resources(group, version, notifies_kind)
 
-        # Get Notify resources across all namespaces
-        notifies = custom_objects_api.list_cluster_custom_object(group, version, notifies_kind)
+    if cl_filters and notifies:
+        for notify in notifies['items']:
+            for cl_filter in cl_filters['items']:
+                if notify['metadata']['labels'] == cl_filter['metadata']['labels']:
+                    webhook_url = notify['spec']['webhookURL']
+                    node_names = cl_filter['spec']['nodesNames']
+                    print(f"Matched labels: Node names - {node_names}, Webhook URL - {webhook_url}")
+                    for node_name in node_names:
+                        process_events(node_name, webhook_url)
 
-        # Create a dictionary to store filtered resources based on labels
-        filtered_resources = {}
-
-        # Process ClusterFilter resources and filter by label
-        for cl_filter_item in cl_filters['items']:
-            label_selector = cl_filter_item['metadata']['labels']
-
-            # Filter Notify resources based on the label from ClusterFilter
-            filtered_notifies = [
-                notify_item for notify_item in notifies['items'] if
-                all(label in notify_item['metadata']['labels'].items() for label in label_selector.items())
-            ]
-
-            # Store the filtered resources in the dictionary only if there are matching notifies
-            if filtered_notifies:
-                # Assuming there is only one matching Notify for simplicity, you can adjust as needed
-                matching_notify = filtered_notifies[0]
-                common_label = next(iter(label_selector.keys()), None)  # Change this based on your label structure
-                filtered_resources[common_label] = {
-                    'Resource': cl_filter_item['spec']['resource'],
-                    'NodeNames': ', '.join(cl_filter_item['spec']['nodesNames']),
-                    'WebhookURL': matching_notify['spec']['webhookURL']
-                }
-
-        # Print information about the filtered resources
-        print("Filtered Resources across all namespaces:")
-        for common_label, details in filtered_resources.items():
-            print(f"- Common Label: {common_label}")
-            print(f"  - Resource: {details['Resource']}")
-            print(f"  - Node Names: {details['NodeNames']}")
-            print(f"  - Webhook URL: {details['WebhookURL']}")
-    except ApiException as e:
-        print(f"Error getting resources: {e}")
-
-def get_node_events(node_name):
-    # Load Kubernetes configuration
-    load_kube_config()
-
-    # Create Kubernetes API client
-    api_client = client.ApiClient()
-
-    # Create CoreV1Api instance for working with CoreV1 API (which includes Events)
-    core_v1_api = client.CoreV1Api(api_client)
-
-    try:
-        # Get events for the specified node
-        events = core_v1_api.list_event_for_all_namespaces(field_selector=f'involvedObject.name={node_name}')
-
-        # Print information about the events
-        print(f"Events for Node {node_name}:")
-        for event in events.items:
-            print(f"- Type: {event.type}, Reason: {event.reason}, Message: {event.message}")
-
-            # Send the event information to the webhookURL
-            send_to_webhook(webhook_url, event)
-
-    except ApiException as e:
-        print(f"Error getting node events: {e}")
-
-def send_to_webhook(webhook_url, event):
-    # Prepare the data to be sent to the webhook
-    data = {
-        'type': getattr(event, 'type', ''),
-        'reason': getattr(event, 'reason', ''),
-        'message': getattr(event, 'message', ''),
-    }
-
-# Call the function if this module is executed directly
 if __name__ == "__main__":
-    while True:
-        # Get and print filtered resources across all namespaces
-        filtered_resources = get_filtered_resources()
-
-        # Get and print events for each node
-        for node_info in filtered_resources.values():
-            # Extract node name using a regular expression
-            node_name_match = re.search(r'[^,/-]+', node_info['NodeNames'])
-            node_name = node_name_match.group() if node_name_match else None
-
-            webhook_url = node_info['WebhookURL']
-            if node_name:
-                get_node_events(node_name, webhook_url)
-
-        # Wait for a specified interval (e.g., 5 minutes) before the next iteration
-        time.sleep(300)  # 300 seconds = 5 minutes
+    main()

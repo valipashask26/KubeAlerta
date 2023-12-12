@@ -35,7 +35,7 @@ Here, it will deploy 3 types of CRDs:
        name: example-notify
        namespace: kubealerta
        labels:
-         test: sk-01
+         test: kubealerta-01
      spec:
        webhookURL: "https://teams.webhook.url"
      ```
@@ -49,7 +49,7 @@ Here, it will deploy 3 types of CRDs:
        name: filter2
        namespace: kubealerta
        labels:
-         test: sk-02
+         test: kubealerta-02
      spec:
        resource: Deployment
        rNames:
@@ -67,12 +67,14 @@ Here, it will deploy 3 types of CRDs:
        name: node-alert
        namespace: kubealerta
        labels:
-         test: sk-01
+         test: kubealerta-01
      spec:
        resource: Nodes
        nodesNames:
          - aks-agent1pool
      ```
+  Within this configuration, you possess the option to specify either the individual **nodeName** or the **nodepool name**. However, it's important to note that in the ``spec.resource`` field, you must explicitly mention **"Nodes,"** even when intending to target nodes using the nodepool name as a prefix. In such cases, kubeAlerta will recognize the provided nodepool name as a **prefix** and subsequently retrieve events for all nodes sharing that specified prefix.
+
 
 **NOTE:** 
 - The `notify` CRD is mandatory to create.

@@ -1,0 +1,9 @@
+apiVersion: kubealerta.io/v1
+kind: Notify
+metadata:
+  name: example-notify
+  namespace: kubealerta
+  labels:
+    test: kubealerta-01
+spec:
+  webhookURL: "https://teams.webhook.url"
