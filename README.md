@@ -14,6 +14,11 @@ Follow these steps to deploy **kubealerta** in your Kubernetes cluster:
 
  ```bash
    kubectl apply -f manifest.yaml
+
+               OR
+
+   kubectl apply -f https://raw.githubusercontent.com/valipashask26/KubeAlerta/main/deploy/manifest/manifest.yaml
+
 ```
 The manifest will create:
 
